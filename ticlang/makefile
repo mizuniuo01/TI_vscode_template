@@ -24,14 +24,14 @@ ifeq ($(VERBOSE), 1)
   V :=
 endif
 
-USER_C_FILES := $(wildcard ../*.c) $(wildcard ../user/*.c)
+USER_C_FILES := $(wildcard ../*.c) $(wildcard ../user/Src/*.c)
 USER_OBJ_FILES := $(notdir $(USER_C_FILES:.c=.obj))
 OBJECTS = $(USER_OBJ_FILES) $(patsubst %.c,%.obj,$(notdir $(SYSCFG_C_FILES)))
 
 
 CFLAGS += -I.. \
     -I. \
-    -I../user \
+    -I../user/Inc \
     $(addprefix @,$(SYSCFG_OPT_FILES)) \
     -O2 \
     @device.opt \
@@ -85,7 +85,7 @@ endef
 
 $(foreach c_file,$(SYSCFG_C_FILES),$(eval $(call C_RULE,$(c_file))))
 
-VPATH = .. ../user
+VPATH = .. ../user/Src
 
 %.obj: %.c $(SYSCFG_H_FILES)
 	@ echo Building $@
