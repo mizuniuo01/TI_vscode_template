@@ -1,4 +1,6 @@
-MSPM0_SDK_INSTALL_DIR ?= D:/ti/mspm0_sdk_2_10_00_04
+MSPM0_SDK_INSTALL_DIR ?= /path/to/mspm0_sdk_x_xx_xx_xx
+TICLANG_ARMCOMPILER   := /path/to/ti-cgt-armllvm_x.x.x.LTS
+SYSCONFIG_TOOL        := /path/to/sysconfig_x.xx.x/sysconfig_cli.sh
 
 include $(MSPM0_SDK_INSTALL_DIR)/imports.mak
 
@@ -52,7 +54,8 @@ LFLAGS += -ldevice.cmd.genlibs \
     -Wl,--rom_model \
     -Wl,--warn_sections \
     "-L$(TICLANG_ARMCOMPILER)/lib" \
-    -llibc.a
+    -llibc.a \
+    ../ticlang/stack_override.cmd
 
 all: $(NAME).out
 

@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build MSPM0 (TI gmake)",
+            "type": "shell",
+            "command": "gmake",
+            "args": [
+                "all"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/ticlang"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "使用 gmake 编译当前工程"
+        },
+        {
+            "label": "Clean MSPM0 (TI gmake)",
+            "type": "shell",
+            "command": "gmake",
+            "args": [
+                "clean"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/ticlang"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

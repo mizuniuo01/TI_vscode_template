@@ -1,76 +1,147 @@
-# 使用VS Code和Makefile简化的MSPM0工程开发模板
+# TI MSPM0 VS Code 开发模板
 
-## 简要介绍：
-本工程彻底抛弃了臃肿的CCS 采用**VS Code+独立SysConfig+Makefile+Cortex-Debug**的轻量级、自动化开发流
+基于 **VS Code + 独立 SysConfig + Makefile + Cortex-Debug** 的轻量级开发流，适用于 TI MSPM0 系列芯片，彻底抛弃 CCS。
 
-本readme使用copilot协助撰写
-
-需要提前配置好全局的tasks.json settings.json
-
-关键是使用json和makefile自行进行路径链接和配置 json的配置很容易链接错误但是报错不一定明说链接错误 并且makefile改写成自动化脚本才会方便以后使用
+支持 Windows 和 macOS 双平台。
 
 ---
 
-## 硬件与芯片避坑指南
+## 目录结构
 
-### 1. 调试引脚
-MSPM0G3507 依赖以下两个引脚进行SWD下载和在线调试（对应板载的 XDS110）：
-* **PA20** : SWCLK (时钟)
-* **PA19** : SWDIO (数据)
-
-**致命警告**：在SysConfig中配置外设时 **绝对不要**将PA19和PA20复用为其他功能 一旦引脚被强行占用 单片机将无法再次连接仿真器 导致锁芯片变砖
-
-### 2. 官方低功耗建议
-为了达到最低功耗（防止悬空引脚漏电）请在SysConfig图形界面中：
-导航到 **Board → Configure Unused Pins** 并勾选
-SysConfig会自动生成代码，将所有未使用的引脚配置为内部下拉或输出低电平
-
----
-
-## VS Code开发流说明
-
-### 1. 核心架构原理
-* **编译器**：`tiarmclang` (TI 官方基于 LLVM 的编译器)
-* **底层库**：预编译的 `DriverLib.a` 静态库（通过绝对路径链接，工程体积仅几十 KB）
-* **硬件配置**：`.syscfg` 文件 由独立的SysConfig GUI编辑 并在编译时由Makefile自动生成 `ti_msp_dl_config.c` 和 `.h`
-* **构建系统**：魔改版万能 `Makefile` 支持自动搜刮目录下的源码 并自动根据syscfg的名字给固件命名
-
-### 2. 工程目录结构
 ```
-📁 My_MSPM0_Project
- ├── 📄 template.c       <-- 主函数 (main.c)
- ├── 📄 template.syscfg  <-- 硬件配置文件 (建议使用SysConfig GUI生成syscfg后保存到工程内使用)
- ├── 📁 user             <-- 自己的业务代码 (Makefile会自动识别并编译该文件夹下的所有 .c/.h)
- │    ├── 📄 example.c
- │    └── 📄 example.h
- └── 📁 ticlang          <-- 编译工作区 (执行make的地方，VS Code需以此为工作目录)
-      └── 📄 makefile    <-- 核心构建脚本 (已配置VPATH和自动推导)
+TI_vscode_template/
+├── win/                    # Windows 平台模版工程（路径为占位符）
+│   ├── template.c
+│   ├── template.syscfg
+│   ├── settings.json       ← 粘贴到 VS Code TI profile 全局设置
+│   ├── tasks.json          ← 粘贴到 VS Code TI profile 全局任务
+│   └── ticlang/
+│       ├── makefile
+│       └── device_linker.cmd
+├── mac/                    # macOS 平台模版工程（路径为占位符）
+│   ├── template.c
+│   ├── template.syscfg
+│   ├── settings.json       ← 粘贴到 VS Code TI profile 全局设置
+│   ├── tasks.json          ← 粘贴到 VS Code TI profile 全局任务
+│   └── ticlang/
+│       ├── makefile
+│       └── device_linker.cmd
+└── readme.md
 ```
-*(注：目前的 Makefile 默认抓取 `user/` 目录 如果想增加其他名字的文件夹如 `hardware/` 只需在 Makefile 的 `CFLAGS`、`USER_C_FILES` 和 `VPATH` 三处加上新路径即可)*
 
-### 3. 日常开发流程
-
-**第一步：配置硬件外设 (SysConfig)**
-1. 打开在TI官网下载的独立SysConfig
-2. 选择固件库路径和芯片后开始配置
-3. 配置完毕后将 `.syscfg` 文件保存到当前工程的文件夹下(注意文件名必须和工程名对应 否则makefile会链接错误)
-
-**第二步：编写业务逻辑**
-1. 在 `user/` 文件夹下创建 `.c` 和 `.h` 文件
-2. 魔改的 Makefile 包含了 `wildcard` 和 `VPATH` 规则 会自动发现并编译 `user/` 目录下的所有源码
-
-**第三步：编译和烧录**
-1. **仅编译检查(F7)**：在 VS Code 快捷键设置 (`keybindings.json`) 中将 `workbench.action.tasks.build` 绑定为 `F7` 敲代码时按 `F7` 即可编译出 `.out` 固件
-2. **一键烧录与调试 (F5)**：连上开发板（XDS110）选择对应的launch配置 按下 `F5` 下载（本人改成了 `F8` ）
-3. **丝滑连招**：得益于 `settings.json` 中的 `launch`模块中的 `preLaunchTask` 系统将全自动完成：保存代码 -> 调起 `gmake` 编译 -> 调起 OpenOCD 烧录 -> 停在 `main()` 函数第一行断点
+`win/` 和 `mac/` 是完整的可用模版工程，路径占位符为 `/path/to/...`（Windows 用反斜杠 `D:/path/to/...`）。`settings.json` 和 `tasks.json` 需粘贴到 VS Code 的 **TI profile** 全局配置中，不是工程内的 `.vscode/`。通过此举可以不用每次新建工程都重新配置json。
 
 ---
 
-## 如何在自己的电脑还原此开发流的简单说明
-1. 安装 CCS（提取里面的编译器和 gmake）和 MSPM0 SDK（提供底层库）
-2. 安装独立版SysConfig（TI官网下载）
-3. 在 SDK 目录中找到官方提供的空白模板工程放到自己的工作区
-4. 前往 SDK 目录下的 `imports.mak`，修改 `TICLANG_ARMCOMPILER`、`SYSCONFIG_TOOL` 等路径为当前电脑的绝对路径。*(注：编译器路径末尾千万不要多写一个 `/bin`，否则会报错找不到文件！)*
-5. 在自己的工程的 `makefile` 第一行 确认 `MSPM0_SDK_INSTALL_DIR` 指向了正确的 SDK 绝对路径
-6. 可以选择将 `makefile` 改写为自动化脚本
-7. 在当前VS Code配置中配置好全局的 `tasks.json` 和 `settings.json` 否则无法使用vscode调用编译 同时全局的配置能便于日后跨工程快捷使用
+## 前置依赖
+
+| 工具 | 说明 |
+|------|------|
+| MSPM0 SDK | TI 官网下载，提供 DriverLib 等底层库 |
+| TI Arm Clang 编译器 (`ti-cgt-armllvm`) | TI 官网下载，或从 CCS 安装目录提取 |
+| 独立版 SysConfig | TI 官网下载，**不要用 CCS 内置的**（缺少 GUI framework）脱离 CCS 依赖 |
+| OpenOCD | Cortex-Debug 调试所需，配合 XDS110 使用 |
+| VS Code 扩展 | `ms-vscode.cpptools`、`marus25.cortex-debug`等。（务必安装Cordex-Debug和TI芯片相关插件等插件。） |
+
+> Windows 额外需要 CCS 自带的 `gmake`（位于 CCS 安装目录下的 `utils/bin/`），或将其加入 `PATH`。
+> macOS 可以使用 macOS 自带的 `make`。
+
+---
+
+## 配置步骤
+
+### 第一步：修改 `imports.mak`
+
+SDK 根目录下的 `imports.mak` 存放工具链路径，需要修改以下两项：
+
+```makefile
+SYSCONFIG_TOOL      ?= /path/to/sysconfig/sysconfig_cli    # Windows 用 .bat，macOS 用 .sh
+TICLANG_ARMCOMPILER ?= /path/to/ti-cgt-armllvm             # 末尾不要加 /bin
+```
+
+> **注意：`TICLANG_ARMCOMPILER` 末尾不要加 `/bin`**，否则编译时会报找不到文件。
+
+---
+
+### 第二步：创建工程 makefile
+
+将 `local/ticlang/makefile` 复制到自己工程的 `ticlang/` 目录下，修改第一行 `MSPM0_SDK_INSTALL_DIR` 为 SDK 实际路径：
+
+**Windows**
+```makefile
+MSPM0_SDK_INSTALL_DIR ?= D:/path/to/mspm0_sdk
+```
+
+**macOS**
+```makefile
+MSPM0_SDK_INSTALL_DIR ?= /path/to/mspm0_sdk
+TICLANG_ARMCOMPILER   := /path/to/ti-cgt-armllvm
+SYSCONFIG_TOOL        := /path/to/sysconfig/sysconfig_cli.sh
+```
+
+> macOS 上在 `include imports.mak` 之前显式赋值 `TICLANG_ARMCOMPILER` 和 `SYSCONFIG_TOOL`，覆盖掉 `imports.mak` 里的 Windows 默认值。如果采用这套模版进行跨平台同步开发，注意 makefile 加入 `.gitignore`，Win/Mac 各自维护本地副本互不干扰。
+
+---
+
+### 第三步：配置 VS Code profile
+
+建议在 VS Code 中为 TI 开发单独建一个 **Profile**，将 `settings.json`、`tasks.json` 配置在 Profile 级别，所有 MSPM0 工程共享，无需在每个工程内重复配置。
+
+将对应平台的示例文件（`win/` 或 `mac/` 下）内容复制到 Profile 的全局 `settings.json` 和 `tasks.json`，并将路径占位符替换为实际路径：
+
+| 占位符 | 替换为 |
+|--------|--------|
+| `/path/to/mspm0_sdk` | MSPM0 SDK 根目录 |
+| `/path/to/ti-cgt-armllvm` | 编译器根目录（不含 `/bin`） |
+
+**Windows** 使用 `gmake`（CCS 自带），**macOS** 使用系统 `make`。
+
+> 本模版里提供的 `json` 配置仅供参考，具体请依照自己的需求进行配置。
+
+---
+
+### 第四步：工程目录结构约定
+
+```
+MyProject/
+├── main.c
+├── project.syscfg
+├── user/
+│   ├── Inc/
+│   └── Src/
+└── ticlang/
+    ├── makefile              ← 本地维护，加入 .gitignore
+    ├── device_linker.cmd
+    └── ti_msp_dl_config.*    ← SysConfig 自动生成，勿手动修改
+```
+
+---
+
+## 常用操作
+
+| 操作 | 方式 |
+|------|------|
+| 编译 | 建议自行指定快捷键，推荐 `F7` |
+| 编译 + 烧录 + 调试 | `F8`（preLaunchTask 自动编译，Cortex-Debug 烧录，停在 `main()` 第一行） |
+| 仅清理 | 运行 `Clean` task |
+| 详细编译输出 | `cd ticlang && make VERBOSE=1` |
+| 重新生成 SysConfig 文件 | `cd ticlang && make syscfg` |
+| 打开 SysConfig GUI | `cd ticlang && make syscfg-gui` |
+
+---
+
+## 硬件注意事项
+
+- **PA19 (SWDIO) 和 PA20 (SWCLK)** 是 SWD 调试引脚，在 SysConfig 中**绝对不能**复用为其他功能，否则锁芯片
+- 建议在 SysConfig 中勾选 **Board → Configure Unused Pins**，避免悬空引脚漏电
+- 默认栈大小为 512 字节，代码量较大时可以通过手动创建.cmd文件，覆盖默认栈大小，以扩大
+
+---
+
+## 常见问题
+
+**Q: 编译报找不到 `tiarmclang`**
+检查 `imports.mak` 中 `TICLANG_ARMCOMPILER` 末尾是否多写了 `/bin`。
+
+**Q: makefile 被 git 追踪导致 Win/Mac 互相污染**
+在工程 `.gitignore` 中加入 `ticlang/makefile`，并执行 `git rm --cached ticlang/makefile` 解除追踪。

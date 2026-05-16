@@ -1,0 +1,46 @@
+{
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "workbench.secondarySideBar.defaultVisibility": "visible",
+    "editor.fontLigatures": false,
+    "explorer.confirmDragAndDrop": false,
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/ticlang",
+        "${workspaceFolder}/user/Inc",
+        "/path/to/mspm0_sdk/source",
+        "/path/to/mspm0_sdk/source/third_party/CMSIS/Core/Include"
+    ],
+    "C_Cpp.default.defines": [
+        "__MSPM0G3507__"
+    ],
+    "C_Cpp.default.compilerPath": "/path/to/ti-cgt-armllvm/bin/tiarmclang",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.cppStandard": "c++14",
+    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "debug.allowBreakpointsEverywhere": true,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "MSPM0-debug",
+                "type": "cortex-debug",
+                "request": "launch",
+                "servertype": "openocd",
+                "cwd": "${workspaceFolder}/ticlang",
+                "executable": "${workspaceFolder}/ticlang/${workspaceFolderBasename}.out",
+                "device": "MSPM0G3507",
+                "preLaunchTask": "Build MSPM0 (TI gmake)",
+                "configFiles": [
+                    "interface/xds110.cfg",
+                    "target/ti_mspm0.cfg"
+                ],
+                "svdFile": "/path/to/mspm0_sdk/source/ti/devices/msp/m0p/MSPM0G350X.svd",
+                "showDevDebugOutput": "none"
+            }
+        ]
+    }
+}
