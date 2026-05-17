@@ -29,7 +29,8 @@ USER_OBJ_FILES := $(notdir $(USER_C_FILES:.c=.obj))
 OBJECTS = $(USER_OBJ_FILES) $(patsubst %.c,%.obj,$(notdir $(SYSCFG_C_FILES)))
 
 
-CFLAGS += -I.. \
+CFLAGS += -MD \
+	    -I.. \
     -I. \
     -I../user/Inc \
     $(addprefix @,$(SYSCFG_OPT_FILES)) \
@@ -88,6 +89,8 @@ $(foreach c_file,$(SYSCFG_C_FILES),$(eval $(call C_RULE,$(c_file))))
 
 VPATH = .. ../user/Src
 
+-include $(OBJECTS:.obj=.d)
+
 %.obj: %.c $(SYSCFG_H_FILES)
 	@ echo Building $@
 	$(V) $(CC) $(CFLAGS) -c $< -o $@
@@ -99,6 +102,7 @@ $(NAME).out: $(OBJECTS)
 clean:
 	@ echo Cleaning...
 	$(V) $(RM) $(OBJECTS) > $(DEVNULL) 2>&1
+	$(V) $(RM) $(OBJECTS:.obj=.d) > $(DEVNULL) 2>&1
 	$(V) $(RM) $(NAME).out > $(DEVNULL) 2>&1
 	$(V) $(RM) $(NAME).map > $(DEVNULL) 2>&1
 	# $(V) $(RM) $(call SLASH_FIXUP,$(SYSCFG_FILES)) > $(DEVNULL) 2>&1
