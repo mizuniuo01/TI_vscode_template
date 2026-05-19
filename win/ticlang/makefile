@@ -61,7 +61,7 @@ LFLAGS += -ldevice.cmd.genlibs \
 all: $(BUILD_DIR)/$(NAME).out
 
 $(BUILD_DIR):
-	@mkdir -p $@
+	-@mkdir $@
 
 .INTERMEDIATE: syscfg
 $(SYSCFG_FILES): syscfg
