@@ -58,7 +58,7 @@ LFLAGS += -ldevice.cmd.genlibs \
     -Wl,--rom_model \
     -Wl,--warn_sections \
     "-L$(TICLANG_ARMCOMPILER)/lib" \
-    -llibc.a \
+    -llibc.a
 
 all: $(BUILD_DIR)/$(NAME).out
 

@@ -12,7 +12,7 @@ SYSCFG_FILE := $(firstword $(wildcard ../*.syscfg))
 
 NAME := $(basename $(notdir $(SYSCFG_FILE)))
 
-BUILD_DIR = output
+BUILD_DIR = build
 
 SYSCFG_FILES := $(shell $(SYSCFG_CMD_STUB) --listGeneratedFiles --listReferencedFiles --output . $(SYSCFG_FILE))
 
