@@ -1,0 +1,63 @@
+{
+    // C/C++ — IntelliSense
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.default.compilerPath": "<path-to-ti-cgt-armllvm>/bin/tiarmclang.exe",
+    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.cppStandard": "c++14",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/ticlang",
+        "${workspaceFolder}/user/Inc",
+        "<path-to-mspm0-sdk>/source",
+        "<path-to-mspm0-sdk>/source/third_party/CMSIS/Core/Include"
+    ],
+    "C_Cpp.default.defines": [
+        "__MSPM0G3507__"
+    ],
+
+    // C/C++ — Debug & Flash
+    "debug.allowBreakpointsEverywhere": true,
+    "cortex-debug.openocdPath": "<path-to-openocd>/bin/openocd.exe",
+    "cortex-debug.armToolchainPath": "<path-to-arm-none-eabi-gcc>/bin",
+    "launch": {
+        "configurations": [
+            {
+                "name": "MSPM0-download",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/ticlang/build/${workspaceFolderBasename}.out",
+                "cwd": "${workspaceFolder}/ticlang",
+                "miDebuggerPath": "<path-to-arm-none-eabi-gcc>/bin/arm-none-eabi-gdb.exe",
+                "preLaunchTask": "Flash",
+                "externalConsole": false
+            },
+            {
+                "name": "MSPM0-debug",
+                "type": "cortex-debug",
+                "request": "launch",
+                "servertype": "openocd",
+                "cwd": "${workspaceFolder}/ticlang",
+                "executable": "${workspaceFolder}/ticlang/build/${workspaceFolderBasename}.out",
+                "device": "MSPM0G3507",
+                "serverArgs": ["-c", "adapter speed 3000"],
+                "preLaunchTask": "Build",
+                "configFiles": [
+                    "<path-to-openocd>/scripts/interface/xds110.cfg",
+                    "<path-to-openocd>/scripts/target/ti_mspm0.cfg"
+                ],
+                "svdFile": "<path-to-mspm0-sdk>/source/ti/devices/msp/m0p/MSPM0G350X.svd",
+                "showDevDebugOutput": "none"
+            }
+        ]
+    },
+
+    // C/C++ — Format
+    "clang-format.assumeFilename": "<path-to-home>/.clang-format",
+    "[c]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "[cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    }
+}

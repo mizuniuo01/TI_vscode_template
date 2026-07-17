@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": ["all"],
+            "options": { "cwd": "${workspaceFolder}/ticlang" },
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": ["$gcc"],
+            "detail": "增量编译"
+        },
+        {
+            "label": "Rebuild",
+            "type": "shell",
+            "command": "cmd",
+            "args": ["/c", "mingw32-make clean && mingw32-make all"],
+            "options": { "cwd": "${workspaceFolder}/ticlang" },
+            "problemMatcher": ["$gcc"],
+            "detail": "清理后重新编译"
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "mingw32-make",
+            "args": ["clean"],
+            "options": { "cwd": "${workspaceFolder}/ticlang" },
+            "problemMatcher": [],
+            "detail": "清理编译产物"
+        },
+        {
+            "label": "Flash",
+            "type": "shell",
+            "command": "<path-to-openocd>/bin/openocd.exe",
+            "args": [
+                "-s", "<path-to-openocd>/scripts",
+                "-f", "interface/xds110.cfg",
+                "-f", "target/ti_mspm0.cfg",
+                "-c", "adapter speed 3000",
+                "-c", "program ./build/${workspaceFolderBasename}.out reset exit"
+            ],
+            "dependsOn": "Build",
+            "options": { "cwd": "${workspaceFolder}/ticlang" },
+            "problemMatcher": [],
+            "detail": "编译并烧录"
+        }
+    ]
+}

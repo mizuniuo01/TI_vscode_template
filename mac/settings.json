@@ -1,0 +1,71 @@
+{
+    // C/C++ — IntelliSense
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.default.compilerPath": "<path-to-ti-cgt-armllvm>/bin/tiarmclang",
+    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.cppStandard": "c++14",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/ticlang",
+        "${workspaceFolder}/user/Inc",
+        "<path-to-mspm0-sdk>/source",
+        "<path-to-mspm0-sdk>/source/third_party/CMSIS/Core/Include"
+    ],
+    "C_Cpp.default.defines": [
+        "__MSPM0G3507__"
+    ],
+
+    // C/C++ — Debug
+    "debug.allowBreakpointsEverywhere": true,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "MSPM0-debug",
+                "type": "cortex-debug",
+                "request": "launch",
+                "servertype": "openocd",
+                "cwd": "${workspaceFolder}/ticlang",
+                "executable": "${workspaceFolder}/ticlang/${workspaceFolderBasename}.out",
+                "device": "MSPM0G3507",
+                "preLaunchTask": "Build",
+                "configFiles": [
+                    "interface/xds110.cfg",
+                    "target/ti_mspm0.cfg"
+                ],
+                "svdFile": "<path-to-mspm0-sdk>/source/ti/devices/msp/m0p/MSPM0G350X.svd",
+                "showDevDebugOutput": "none"
+            }
+        ]
+    },
+
+    // Editor
+    "editor.fontLigatures": false,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "workbench.secondarySideBar.defaultVisibility": "visible",
+
+    // Git
+    "git.path": "/usr/bin/git",
+    "git.autofetch": true,
+    "git.confirmSync": false,
+
+    // Terminal
+    "terminal.integrated.fontFamily": "JetBrains Mono",
+
+    // Copilot
+    "github.copilot.nextEditSuggestions.enabled": true,
+
+    // C/C++ — Format
+    "clang-format.executable": "/opt/homebrew/bin/clang-format",
+    "[c]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "[cpp]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "xaver.clang-format"
+    }
+}

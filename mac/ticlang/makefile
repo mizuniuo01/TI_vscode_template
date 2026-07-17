@@ -1,4 +1,6 @@
-MSPM0_SDK_INSTALL_DIR ?= D:/ti/mspm0_sdk_2_10_00_04
+MSPM0_SDK_INSTALL_DIR ?= /path/to/mspm0_sdk_x_xx_xx_xx
+TICLANG_ARMCOMPILER   := /path/to/ti-cgt-armllvm_x.x.x.LTS
+SYSCONFIG_TOOL        := /path/to/sysconfig_x.xx.x/sysconfig_cli.sh
 
 include $(MSPM0_SDK_INSTALL_DIR)/imports.mak
 
@@ -12,6 +14,8 @@ SYSCFG_FILE := $(firstword $(wildcard ../*.syscfg))
 
 NAME := $(basename $(notdir $(SYSCFG_FILE)))
 
+BUILD_DIR = build
+
 SYSCFG_FILES := $(shell $(SYSCFG_CMD_STUB) --listGeneratedFiles --listReferencedFiles --output . $(SYSCFG_FILE))
 
 SYSCFG_C_FILES = $(filter %.c,$(SYSCFG_FILES))
@@ -24,14 +28,16 @@ ifeq ($(VERBOSE), 1)
   V :=
 endif
 
-USER_C_FILES := $(wildcard ../*.c) $(wildcard ../user/*.c)
-USER_OBJ_FILES := $(notdir $(USER_C_FILES:.c=.obj))
-OBJECTS = $(USER_OBJ_FILES) $(patsubst %.c,%.obj,$(notdir $(SYSCFG_C_FILES)))
+USER_C_FILES := $(wildcard ../*.c) $(wildcard ../user/Src/*.c)
+USER_OBJ_FILES := $(addprefix $(BUILD_DIR)/,$(notdir $(USER_C_FILES:.c=.obj)))
+SYSCFG_OBJ_FILES := $(addprefix $(BUILD_DIR)/,$(patsubst %.c,%.obj,$(notdir $(SYSCFG_C_FILES))))
+OBJECTS = $(USER_OBJ_FILES) $(SYSCFG_OBJ_FILES)
 
 
-CFLAGS += -I.. \
+CFLAGS += -MD \
+	    -I.. \
     -I. \
-    -I../user \
+    -I../user/Inc \
     $(addprefix @,$(SYSCFG_OPT_FILES)) \
     -O2 \
     @device.opt \
@@ -48,13 +54,16 @@ LFLAGS += -ldevice.cmd.genlibs \
     "-L$(MSPM0_SDK_INSTALL_DIR)/source" \
     -L.. \
     ../ticlang/device_linker.cmd \
-    "-Wl,-m,$(NAME).map" \
+    "-Wl,-m,$(BUILD_DIR)/$(NAME).map" \
     -Wl,--rom_model \
     -Wl,--warn_sections \
     "-L$(TICLANG_ARMCOMPILER)/lib" \
     -llibc.a
 
-all: $(NAME).out
+all: $(BUILD_DIR)/$(NAME).out
+
+$(BUILD_DIR):
+	@mkdir -p $@
 
 .INTERMEDIATE: syscfg
 $(SYSCFG_FILES): syscfg
@@ -78,26 +87,25 @@ syscfg-gui: $(SYSCFG_FILE) $(SYSCONFIG_GUI_TOOL)
 
 
 define C_RULE
-$(basename $(notdir $(1))).obj: $(1) $(SYSCFG_H_FILES)
+$(BUILD_DIR)/$(basename $(notdir $(1))).obj: $(1) $(SYSCFG_H_FILES) | $(BUILD_DIR)
 	@ echo Building $$@
 	$(V) $(CC) $(CFLAGS) -c $$< -o $$@
 endef
 
 $(foreach c_file,$(SYSCFG_C_FILES),$(eval $(call C_RULE,$(c_file))))
 
-VPATH = .. ../user
+VPATH = .. ../user/Src
 
-%.obj: %.c $(SYSCFG_H_FILES)
+-include $(OBJECTS:.obj=.d)
+
+$(BUILD_DIR)/%.obj: %.c $(SYSCFG_H_FILES) | $(BUILD_DIR)
 	@ echo Building $@
 	$(V) $(CC) $(CFLAGS) -c $< -o $@
 
-$(NAME).out: $(OBJECTS)
+$(BUILD_DIR)/$(NAME).out: $(OBJECTS) | $(BUILD_DIR)
 	@ echo linking $@
-	$(V) $(LNK) -Wl,-u,_c_int00 $(OBJECTS)  $(LFLAGS) -o $(NAME).out
+	$(V) $(LNK) -Wl,-u,_c_int00 $(OBJECTS) $(LFLAGS) -o $@
 
 clean:
 	@ echo Cleaning...
-	$(V) $(RM) $(OBJECTS) > $(DEVNULL) 2>&1
-	$(V) $(RM) $(NAME).out > $(DEVNULL) 2>&1
-	$(V) $(RM) $(NAME).map > $(DEVNULL) 2>&1
-	# $(V) $(RM) $(call SLASH_FIXUP,$(SYSCFG_FILES)) > $(DEVNULL) 2>&1
+	$(V) $(RM) -rf $(BUILD_DIR)
